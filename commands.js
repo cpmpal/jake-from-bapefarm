@@ -25,11 +25,10 @@ function rollADie(dieToRoll) {
     if (d[1] !== "") number = Number.parseInt(d[1]);
     else number = 1;
     for (let i = 0; i < number; i++) {
-      rollArray.push(rollDice(dice)+modifier);
+      rollArray.push(rollDice(dice));
     }
-    if (rollArray.length > 1) {
-      var sum = rollArray.reduce((a, b) => a + b, 0);
-    }
+    var sum = rollArray.reduce((a, b) => a + b, 0);
+    sum = sum + modifier;
     // Identify high and low rolls
     if (advantage !== null) {
       let advRoll = []
@@ -75,7 +74,7 @@ module.exports = {
         console.log(rolls);
         let finalString = "";
         rolls.forEach((arr) => {
-          
+
           finalString = finalString.concat('[' + arr + '], ');
         });
         finalString = finalString.slice(0, -2);
