@@ -85,5 +85,14 @@ module.exports = {
         reject(e);
       }
     })
+  },
+
+  roulette: function() {
+    return new Promise((resolve, reject) => {
+      let finalDecision = rollDice(6);
+      if(finalDecision === 6) resolve(":gun_flipped: ------ :skull_and_crossbones::boom: ");
+      else resolve("You live...for now");
+    })
   }
+
 }

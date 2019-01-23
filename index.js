@@ -17,18 +17,18 @@ function getUsersName(userid) {
 }
 
 /*
- * 
+ *
  * We get in the command with the command prefix.
  * We strip the arugments and the command. We then
  * route into the appropriate command by calling it directly
  * from the commands module that is exported
- * 
- * If the command doesn't exist we throw an exception and 
+ *
+ * If the command doesn't exist we throw an exception and
  * tell the user. We post the exact error in the log in case
  * something else went wrong because ES6 is not thorough enough
  * to now if it definitively has the right error message versus
  * just breaking the bot/app
- */ 
+ */
 function commandRouter(command) {
   let com = command.split(' ');
   comm = com[0].substring(1);

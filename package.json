@@ -1,10 +1,10 @@
 {
-  "name": "nodejs-web-app1",
-  "version": "0.0.0",
-  "description": "NodejsWebApp1",
+  "name": "jake-from-bapefarm",
+  "version": "0.0.2",
+  "description": "Jake from BapeFarm Slack App - Pardon our dust",
   "main": "index.js",
   "author": {
-    "name": ""
+    "name": "Christopher Mohen"
   },
   "dependencies": {
     "@slack/client": "^4.8.0",
