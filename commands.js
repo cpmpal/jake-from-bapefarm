@@ -1,4 +1,6 @@
-﻿function rollDice(diceSide) {
+const spells = require('./spells.js');
+
+function rollDice(diceSide) {
   return Math.floor(Math.random() * (diceSide) + 1);
 }
 
@@ -63,7 +65,7 @@ function rollADie(dieToRoll) {
 
 module.exports = {
 
-  roll: function (dice) {
+  roll: function(dice) {
     return new Promise((resolve, reject) => {
       let rolls = [];
       try {
@@ -80,8 +82,7 @@ module.exports = {
         finalString = finalString.slice(0, -2);
         console.log(finalString);
         resolve(finalString);
-      }
-      catch (e) {
+      } catch (e) {
         reject(e);
       }
     })
@@ -90,8 +91,19 @@ module.exports = {
   roulette: function() {
     return new Promise((resolve, reject) => {
       let finalDecision = rollDice(6);
-      if(finalDecision === 6) resolve(":gun_flipped: ------ :skull_and_crossbones::boom: ");
+      if (finalDecision === 6) resolve(":gun_flipped: ------ :skull_and_crossbones::boom: ");
       else resolve("You live...for now");
+    })
+  },
+
+  spell: function(spellName) {
+    console.log(spellName)
+
+    return new Promise((resolve, reject) => {
+      spells.makeSpell(spellName.join(' ')).then((s) => {
+        console.log(s);
+        resolve(s)
+      }).catch((e) => reject(e));
     })
   }
 

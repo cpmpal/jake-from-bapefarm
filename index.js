@@ -1,18 +1,25 @@
 require('dotenv').config();
 const commands = require('./commands.js');
-const { createEventAdapter } = require('@slack/events-api');
+const {
+  createEventAdapter
+} = require('@slack/events-api');
 const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
-const { WebClient } = require('@slack/client');
+const {
+  WebClient
+} = require('@slack/client');
 const token = process.env.SLACK_TOKEN;
 const port = process.env.PORT || 3000
 const web = new WebClient(token);
 
 function getUsersName(userid) {
   return new Promise((resolve, reject) => {
-    web.users.info({ user: userid }).then((res) => {
+    web.users.info({
+      user: userid
+    }).then((res) => {
       resolve(res.user.name)
-    }, (rej) => { reject(rej) }
-    );
+    }, (rej) => {
+      reject(rej)
+    });
   });
 }
 
@@ -30,15 +37,16 @@ function getUsersName(userid) {
  * just breaking the bot/app
  */
 function commandRouter(command) {
+  let response;
   let com = command.split(' ');
   comm = com[0].substring(1);
   console.log(`Command received ${comm}. Filtering to appropriate promise`);
   try {
     console.log(commands[comm]);
     console.log(com);
-    return commands[comm](com.slice(1))
-  }
-  catch (exception) {
+    response = commands[comm](com.slice(1))
+    return (response);
+  } catch (exception) {
     console.error(e);
     return new Error();
   }
@@ -47,15 +55,25 @@ function commandRouter(command) {
 //Listen on all public channels for an event
 slackEvents.on('message', (event) => {
   console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
+  if(event.text === undefined) console.log("Error: undefined received. That wasn't supposed to happen");
   if (event.text.startsWith('$')) {
     commandRouter(event.text).then((res) => {
-      web.chat.postMessage({
-        channel: event.channel,
-        text: res
-      }).then((status) => console.log(status.ts)).catch(console.error);
-    });
-  }
-});
+        console.log(res)
+        let message;
+        if (typeof(res) === "string") {
+          message = {
+            channel: event.channel,
+            text: res
+          }
+        } else {
+          message = res;
+          message.channel = event.channel;
+          console.log(message);
+        }
+        web.chat.postMessage(message)
+      }).then((status) => console.log(status.ts)).catch(console.error)
+    }});
+
 
 // Place holder testing to say hello and memes
 slackEvents.on('app_mention', (event) => {
