@@ -247,8 +247,7 @@ module.exports = {
             mess = buildMessage(spellObject);
             //console.log(mess);
             resolve(mess);
-          })
-        ).catch((error) => reject(error));
+          }).catch((error) => reject(error));
     })
   }
 }
