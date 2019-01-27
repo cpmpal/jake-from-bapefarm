@@ -13,6 +13,16 @@ const schoolLookup = {
   'Illusion': "https://media-waterdeep.cursecdn.com/attachments/2/704/illusion.png"
 }
 
+const schoolColor = {
+  'Necromancy': "#000000",
+  'Evocation': "#B80808",
+  'Abjuration': "#157ADA",
+  'Conjuration': "#DED411",
+  'Transmutation': "#CA9012",
+  'Enchantment': "#E540CC",
+  'Divination': "#38DFDF",
+  'Illusion': "#B662E7"
+}
 
 
 class Spell {
@@ -102,13 +112,13 @@ class Spell {
 function buildMessage(givenSpell) {
   var attachment = {
     "attachments": [{
-      "fallback": givenSpell.desc,
-      "color": "<spell school>",
+      "fallback": givenSpell.desc[0],
+      "color": schoolColor[givenSpell.school],
       "author_name": "Book of Books",
       "thumb_url": schoolLookup[givenSpell.school],
       "title": givenSpell.name,
       "title_link": givenSpell.dndSpellLink(),
-      "text": givenSpell.desc,
+      "text": givenSpell.desc.join('\n'),
       "fields": [{
           "title": "Level & School",
           "value": givenSpell.levelAndSchool(),
