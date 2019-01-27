@@ -193,7 +193,7 @@ module.exports = {
           // Succeeded
           console.log(parsedBody)
           if(parsedBody['count'] === 0) reject("Explosive runes blind you. Make a race saving throw");
-          resolve(parsedBody['results'][0]['url']);
+          else resolve(parsedBody['results'][0]['url']);
         }, (failed) => reject("Explosive runes blind you. Make a race saving throw"))
         .catch((err) => {
           // Failed
