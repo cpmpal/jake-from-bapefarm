@@ -193,7 +193,7 @@ module.exports = {
           // Succeeded
           console.log(parsedBody)
           resolve(parsedBody['results'][0]['url']);
-        })
+        }, (failed) => reject("Explosive runes blind you. Make a race saving throw"))
         .catch((err) => {
           // Failed
           console.error(err)
@@ -240,7 +240,8 @@ module.exports = {
     return new Promise((resolve, reject) => {
       var mess;
       this.requestSpell(spell)
-        .then((uri) => this.getSpellDetails(uri)
+        .then((uri) => this.getSpellDetails(uri),
+        (fail) => reject(fail))
           .then((spellObject) => {
             //console.log(spellObject.toString())
             mess = buildMessage(spellObject);
