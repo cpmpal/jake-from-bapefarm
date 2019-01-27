@@ -173,7 +173,7 @@ function buildMessage(givenSpell) {
 
 module.exports = {
   makeSpellOpts: function(spellName) {
-    let dontCapitalize = ['of', 'with', 'and', 'from', 'without']
+    let dontCapitalize = ['of', 'with', 'and', 'from', 'without', 'the']
     spellName = spellName.split(' ');
     spellName.forEach((name, i, namepart) => {
       if (!dontCapitalize.includes(name)) namepart[i] = capitalize(name);
