@@ -176,7 +176,7 @@ module.exports = {
     let dontCapitalize = ['of', 'with', 'and', 'from', 'without']
     spellName = spellName.split(' ');
     spellName.forEach((name, i, namepart) => {
-      if !(dontCapitalize.includes(name)) namepart[i] = capitalize(name);
+      if (!dontCapitalize.includes(name)) namepart[i] = capitalize(name);
       //console.log(name)
     });
     spellName = spellName.join('+');
