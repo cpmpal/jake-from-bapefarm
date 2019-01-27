@@ -72,7 +72,7 @@ slackEvents.on('message', (event) => {
       }
       web.chat.postMessage(message)
     }, rej => {
-      web.chat.({
+      web.chat.postEphemeral({
         channel: event.channel,
         user: event.user,
         text: rej
