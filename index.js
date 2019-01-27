@@ -55,24 +55,31 @@ function commandRouter(command) {
 //Listen on all public channels for an event
 slackEvents.on('message', (event) => {
   console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
-  if(event.text === undefined) console.log("Error: undefined received. That wasn't supposed to happen");
+  if (event.text === undefined) console.log("Error: undefined received. That wasn't supposed to happen");
   if (event.text.startsWith('$')) {
     commandRouter(event.text).then((res) => {
-        console.log(res)
-        let message;
-        if (typeof(res) === "string") {
-          message = {
-            channel: event.channel,
-            text: res
-          }
-        } else {
-          message = res;
-          message.channel = event.channel;
-          console.log(message);
+      console.log(res)
+      let message;
+      if (typeof(res) === "string") {
+        message = {
+          channel: event.channel,
+          text: res
         }
-        web.chat.postMessage(message)
-      }).then((status) => console.log(status.ts)).catch(console.error)
-    }});
+      } else {
+        message = res;
+        message.channel = event.channel;
+        console.log(message);
+      }
+      web.chat.postMessage(message)
+    }, rej => {
+      web.chat.({
+        channel: event.channel,
+        user: event.user,
+        text: rej
+      })
+    }).then((status) => console.log(status.ts)).catch(console.error)
+  }
+});
 
 
 // Place holder testing to say hello and memes
