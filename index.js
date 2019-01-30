@@ -55,8 +55,11 @@ function commandRouter(command) {
 //Listen on all public channels for an event
 slackEvents.on('message', (event) => {
   console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
-  if (event.text === undefined) console.log("Error: undefined received. That wasn't supposed to happen");
-  if (event.text.startsWith('$')) {
+  if (event.text === undefined) { 
+    console.log("Error: undefined received. That wasn't supposed to happen");
+    console.log(`subtype: ${event.subtype} hidden: ${event.hidden}`);
+}
+  else if (event.text.startsWith('$')) {
     commandRouter(event.text).then((res) => {
       console.log(res)
       let message;
