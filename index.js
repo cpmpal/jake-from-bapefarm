@@ -36,7 +36,7 @@ function getPublicUrl(fileID, fileURL) {
         u = u.slice(24);
         let secret = u.slice(-10);
         u = u.slice(0, -11);
-        fileURL = fileURL.slice(fileURL.lastIndexOf('/'));
+        fileURL = fileURL.slice(fileURL.lastIndexOf('/')+1);
         u = "https://files.slack.com/files-pri/" + u + '/' + fileURL + '?pub_secret=' + secret;
         console.log(`Permalink generated for ${fileID}, ${u}`)
         resolve(u)
