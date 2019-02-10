@@ -26,7 +26,7 @@ function getUsersName(userid) {
   });
 }
 
-function getPublicUrl(fileID, fileName) {
+function getPublicUrl(fileID, fileURL) {
   return new Promise((resolve, reject) => {
     fweb.files.sharedPublicURL({
         file: fileID
@@ -36,8 +36,8 @@ function getPublicUrl(fileID, fileName) {
         u = u.slice(24);
         let secret = u.slice(-10);
         u = u.slice(0, -11);
-        fileName = fileName.toLowerCase();
-        u = "https://files.slack.com/files-pri/" + u + '/' + fileName + '?pub_secret=' + secret;
+        fileURL = fileURL.slice(fileURL.lastIndexOf('/'));
+        u = "https://files.slack.com/files-pri/" + u + '/' + fileURL + '?pub_secret=' + secret;
         console.log(`Permalink generated for ${fileID}, ${u}`)
         resolve(u)
       })
@@ -119,7 +119,7 @@ slackEvents.on('file_created', (event) => {
       //if it's an image we uplaod to imgur
       if (response.file.mimetype.startsWith('image')) {
         //console.log(response);
-        getPublicUrl(event.file_id, response.file.name).then((url) => {
+        getPublicUrl(event.file_id, response.file.url_private).then((url) => {
           console.log(`Reuploading from ${url} to imgur`)
           imgur.uploadUrl(url).then((r) => {
             //console.log(r)
