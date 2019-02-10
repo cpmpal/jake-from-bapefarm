@@ -1,4 +1,5 @@
 require('dotenv').config();
+var imgur = require('imgur');
 const commands = require('./commands.js');
 const {
   createEventAdapter
@@ -8,8 +9,10 @@ const {
   WebClient
 } = require('@slack/client');
 const token = process.env.SLACK_TOKEN;
+const userToken = process.env.SLACK_USER_TOKEN;
 const port = process.env.PORT || 3000
 const web = new WebClient(token);
+const fweb = new WebClient(userToken);
 
 function getUsersName(userid) {
   return new Promise((resolve, reject) => {
@@ -22,6 +25,31 @@ function getUsersName(userid) {
     });
   });
 }
+
+function getPublicUrl(fileID, fileName) {
+  return new Promise((resolve, reject) => {
+    fweb.files.sharedPublicURL({
+        file: fileID
+      }).then((respose) => {
+        let u = respose.file.permalink_public.replace('\\/', '/');
+        console.log(u.slice(23));
+        u = u.slice(24);
+        let secret = u.slice(-10);
+        u = u.slice(0, -11);
+        let correctName = fileName.slice(-3).toLowerCase();
+        fileName = fileName.replace(fileName.slice(-3), correctName);
+        u = "https://files.slack.com/files-pri/"+ u + '/' + fileName + '?pub_secret=' + secret;
+        console.log(`Permalink generated for ${fileID}, ${u}`)
+        resolve(u)
+      })
+      .catch((error) => {
+        console.error(error);
+        reject(new Error(error));
+      })
+
+  })
+}
+
 
 /*
  *
@@ -80,6 +108,41 @@ slackEvents.on('message', (event) => {
     }).then((status) => console.log(status.ts)).catch(console.error)
   }
 });
+
+slackEvents.on('file_created', (event) => {
+  if (event.file_id !== undefined) {
+    web.files.info({
+      file: event.file_id
+    }).then((response) => {
+      console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
+      //if it's an image we uplaod to imgur
+      if (response.file.mimetype.startsWith('image')) {
+        getPublicUrl(event.file_id, response.file.name).then((url) => {
+          console.log(`Reuploading from ${url} to imgur`)
+          imgur.uploadUrl(url).then((r) => {
+            //console.log(r)
+            web.chat.postMessage({
+              channel : response.file.channels[0],
+              text : r.data.link
+            }).then(()=>{
+              fweb.files.delete({
+                file : event.file_id
+              }).then(() => {
+                console.log("file deleted")
+              }).catch((error) => console.error(error))
+            }).catch((e) => {
+              console.error("Couldn't post link")
+              console.error(e);
+
+            })
+          }).catch((error) => console.log(error))
+        }).catch((error) => console.error(error))
+      }
+    }).catch((error) => {
+      console.error(error)
+    })
+  }
+})
 
 
 // Place holder testing to say hello and memes
