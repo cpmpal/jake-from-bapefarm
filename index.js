@@ -38,7 +38,7 @@ function getPublicUrl(fileID, fileName) {
         u = u.slice(0, -11);
         let correctName = fileName.slice(-3).toLowerCase();
         fileName = fileName.replace(fileName.slice(-3), correctName);
-        u = "https://files.slack.com/files-pri/"+ u + '/' + fileName + '?pub_secret=' + secret;
+        u = "https://files.slack.com/files-pri/" + u + '/' + fileName + '?pub_secret=' + secret;
         console.log(`Permalink generated for ${fileID}, ${u}`)
         resolve(u)
       })
@@ -83,11 +83,10 @@ function commandRouter(command) {
 //Listen on all public channels for an event
 slackEvents.on('message', (event) => {
   console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
-  if (event.text === undefined) { 
+  if (event.text === undefined) {
     console.log("Error: undefined received. That wasn't supposed to happen");
     console.log(`subtype: ${event.subtype} hidden: ${event.hidden}`);
-}
-  else if (event.text.startsWith('$')) {
+  } else if (event.text.startsWith('$')) {
     commandRouter(event.text).then((res) => {
       console.log(res)
       let message;
@@ -125,11 +124,11 @@ slackEvents.on('file_created', (event) => {
           imgur.uploadUrl(url).then((r) => {
             //console.log(r)
             web.chat.postMessage({
-              channel : response.file.channels[0],
-              text : r.data.link
-            }).then(()=>{
+              channel: response.file.channels[0],
+              text: r.data.link
+            }).then(() => {
               fweb.files.delete({
-                file : event.file_id
+                file: event.file_id
               }).then(() => {
                 console.log("file deleted")
               }).catch((error) => console.error(error))
