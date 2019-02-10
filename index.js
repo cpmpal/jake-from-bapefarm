@@ -36,8 +36,7 @@ function getPublicUrl(fileID, fileName) {
         u = u.slice(24);
         let secret = u.slice(-10);
         u = u.slice(0, -11);
-        let correctName = fileName.slice(-3).toLowerCase();
-        fileName = fileName.replace(fileName.slice(-3), correctName);
+        fileName = fileName.toLowerCase();
         u = "https://files.slack.com/files-pri/" + u + '/' + fileName + '?pub_secret=' + secret;
         console.log(`Permalink generated for ${fileID}, ${u}`)
         resolve(u)
@@ -84,8 +83,7 @@ function commandRouter(command) {
 slackEvents.on('message', (event) => {
   console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
   if (event.text === undefined) {
-    console.log("Error: undefined received. That wasn't supposed to happen");
-    console.log(`subtype: ${event.subtype} hidden: ${event.hidden}`);
+    console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
   } else if (event.text.startsWith('$')) {
     commandRouter(event.text).then((res) => {
       console.log(res)
@@ -112,6 +110,7 @@ slackEvents.on('message', (event) => {
 });
 
 slackEvents.on('file_created', (event) => {
+  console.log(event);
   if (event.file_id !== undefined) {
     web.files.info({
       file: event.file_id
@@ -119,12 +118,14 @@ slackEvents.on('file_created', (event) => {
       console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
       //if it's an image we uplaod to imgur
       if (response.file.mimetype.startsWith('image')) {
+        console.log(response);
         getPublicUrl(event.file_id, response.file.name).then((url) => {
           console.log(`Reuploading from ${url} to imgur`)
           imgur.uploadUrl(url).then((r) => {
             //console.log(r)
+            let chan  = response.file.is_public?response.file.channels[0]:response.file.groups[0];
             web.chat.postMessage({
-              channel: response.file.channels[0],
+              channel: chan,
               text: r.data.link
             }).then(() => {
               fweb.files.delete({
