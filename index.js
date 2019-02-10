@@ -110,7 +110,7 @@ slackEvents.on('message', (event) => {
 });
 
 slackEvents.on('file_created', (event) => {
-  console.log(event);
+  //console.log(event);
   if (event.file_id !== undefined) {
     web.files.info({
       file: event.file_id
@@ -118,7 +118,7 @@ slackEvents.on('file_created', (event) => {
       console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
       //if it's an image we uplaod to imgur
       if (response.file.mimetype.startsWith('image')) {
-        console.log(response);
+        //console.log(response);
         getPublicUrl(event.file_id, response.file.name).then((url) => {
           console.log(`Reuploading from ${url} to imgur`)
           imgur.uploadUrl(url).then((r) => {
