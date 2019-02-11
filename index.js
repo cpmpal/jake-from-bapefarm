@@ -110,7 +110,7 @@ slackEvents.on('message', (event) => {
 });
 
 slackEvents.on('file_shared', (event) => {
-  //console.log(event);
+  console.log(event);
   if (event.file_id !== undefined) {
     web.files.info({
       file: event.file_id
