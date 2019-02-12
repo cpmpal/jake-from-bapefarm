@@ -117,6 +117,7 @@ slackEvents.on('file_shared', (event) => {
     }).then((response) => {
       console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
       //if it's an image we uplaod to imgur
+      var uname = "<@" + response.file.user +">"
       if (response.file.mimetype.startsWith('image')) {
         //console.log(response);
         getPublicUrl(event.file_id, response.file.url_private).then((url) => {
@@ -126,7 +127,7 @@ slackEvents.on('file_shared', (event) => {
             let chan  = response.file.is_public?response.file.channels[0]:response.file.groups[0];
             web.chat.postMessage({
               channel: chan,
-              text: r.data.link
+              text: r.data.link + "\nfrom: " + uname
             }).then(() => {
               fweb.files.delete({
                 file: event.file_id
