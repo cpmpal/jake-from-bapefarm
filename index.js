@@ -14,6 +14,8 @@ const port = process.env.PORT || 3000
 const web = new WebClient(token);
 const fweb = new WebClient(userToken);
 
+
+
 function getUsersName(userid) {
   return new Promise((resolve, reject) => {
     web.users.info({
@@ -25,6 +27,8 @@ function getUsersName(userid) {
     });
   });
 }
+
+// We need individual user tokens to create a public url for files in private channels
 
 function getPublicUrl(fileID, fileURL) {
   return new Promise((resolve, reject) => {
