@@ -1,5 +1,7 @@
 require('dotenv').config();
-const {downloadFile} = require('./utils.js')
+const {
+  downloadFile
+} = require('./utils.js')
 const commands = require('./commands.js');
 const {
   createEventAdapter
@@ -58,33 +60,35 @@ function commandRouter(command) {
   }
 }
 
-//Listen on all public channels for an event
+//Listen on all public channels for a message event
 slackEvents.on('message', (event) => {
-  console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
-  if (event.text === undefined) {
-    console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
-  } else if (event.text.startsWith('$')) {
-    commandRouter(event.text).then((res) => {
-      console.log(res)
-      let message;
-      if (typeof(res) === "string") {
-        message = {
-          channel: event.channel,
-          text: res
+  if (!event.hidden) {
+    console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
+    if (event.text === undefined) {
+      console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
+    } else if (event.text.startsWith('$')) {
+      commandRouter(event.text).then((res) => {
+        console.log(res)
+        let message;
+        if (typeof(res) === "string") {
+          message = {
+            channel: event.channel,
+            text: res
+          }
+        } else {
+          message = res;
+          message.channel = event.channel;
+          console.log(message);
         }
-      } else {
-        message = res;
-        message.channel = event.channel;
-        console.log(message);
-      }
-      web.chat.postMessage(message)
-    }, rej => {
-      web.chat.postEphemeral({
-        channel: event.channel,
-        user: event.user,
-        text: rej
-      })
-    }).then((status) => console.log(status.ts)).catch(console.error)
+        web.chat.postMessage(message)
+      }, rej => {
+        web.chat.postEphemeral({
+          channel: event.channel,
+          user: event.user,
+          text: rej
+        })
+      }).then((status) => console.log(status.ts)).catch(console.error)
+    }
   }
 });
 
@@ -103,7 +107,7 @@ slackEvents.on('file_shared', (event) => {
               let chan = response.file.is_public ? response.file.channels[0] : response.file.groups[0];
               web.chat.postMessage({
                   channel: chan,
-                  text: link
+                  text: `Image uploaded from <@${response.file.user}>\n*${response.file.title}*:\n` + link
                 })
                 .then(() => {
                   fweb.files.delete({
