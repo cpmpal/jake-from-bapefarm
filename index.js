@@ -1,5 +1,7 @@
 require('dotenv').config();
-var imgur = require('imgur');
+const {
+  downloadFile
+} = require('./utils.js')
 const commands = require('./commands.js');
 const {
   createEventAdapter
@@ -14,6 +16,8 @@ const port = process.env.PORT || 3000
 const web = new WebClient(token);
 const fweb = new WebClient(userToken);
 
+
+
 function getUsersName(userid) {
   return new Promise((resolve, reject) => {
     web.users.info({
@@ -24,29 +28,6 @@ function getUsersName(userid) {
       reject(rej)
     });
   });
-}
-
-function getPublicUrl(fileID, fileURL) {
-  return new Promise((resolve, reject) => {
-    fweb.files.sharedPublicURL({
-        file: fileID
-      }).then((respose) => {
-        let u = respose.file.permalink_public.replace('\\/', '/');
-        console.log(u.slice(23));
-        u = u.slice(24);
-        let secret = u.slice(-10);
-        u = u.slice(0, -11);
-        fileURL = fileURL.slice(fileURL.lastIndexOf('/')+1);
-        u = "https://files.slack.com/files-pri/" + u + '/' + fileURL + '?pub_secret=' + secret;
-        console.log(`Permalink generated for ${fileID}, ${u}`)
-        resolve(u)
-      })
-      .catch((error) => {
-        console.error(error);
-        reject(new Error(error));
-      })
-
-  })
 }
 
 
@@ -79,33 +60,35 @@ function commandRouter(command) {
   }
 }
 
-//Listen on all public channels for an event
+//Listen on all public channels for a message event
 slackEvents.on('message', (event) => {
-  console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
-  if (event.text === undefined) {
-    console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
-  } else if (event.text.startsWith('$')) {
-    commandRouter(event.text).then((res) => {
-      console.log(res)
-      let message;
-      if (typeof(res) === "string") {
-        message = {
-          channel: event.channel,
-          text: res
+  if (!event.hidden) {
+    console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
+    if (event.text === undefined) {
+      console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
+    } else if (event.text.startsWith('$')) {
+      commandRouter(event.text).then((res) => {
+        console.log(res)
+        let message;
+        if (typeof(res) === "string") {
+          message = {
+            channel: event.channel,
+            text: res
+          }
+        } else {
+          message = res;
+          message.channel = event.channel;
+          console.log(message);
         }
-      } else {
-        message = res;
-        message.channel = event.channel;
-        console.log(message);
-      }
-      web.chat.postMessage(message)
-    }, rej => {
-      web.chat.postEphemeral({
-        channel: event.channel,
-        user: event.user,
-        text: rej
-      })
-    }).then((status) => console.log(status.ts)).catch(console.error)
+        web.chat.postMessage(message)
+      }, rej => {
+        web.chat.postEphemeral({
+          channel: event.channel,
+          user: event.user,
+          text: rej
+        })
+      }).then((status) => console.log(status.ts)).catch(console.error)
+    }
   }
 });
 
@@ -113,38 +96,37 @@ slackEvents.on('file_shared', (event) => {
   console.log(event);
   if (event.file_id !== undefined) {
     web.files.info({
-      file: event.file_id
-    }).then((response) => {
-      console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
-      //if it's an image we uplaod to imgur
-      var uname = "<@" + response.file.user +">"
-      if (response.file.mimetype.startsWith('image')) {
-        //console.log(response);
-        getPublicUrl(event.file_id, response.file.url_private).then((url) => {
-          console.log(`Reuploading from ${url} to imgur`)
-          imgur.uploadUrl(url).then((r) => {
-            //console.log(r)
-            let chan  = response.file.is_public?response.file.channels[0]:response.file.groups[0];
-            web.chat.postMessage({
-              channel: chan,
-              text: r.data.link + "\nfrom: " + uname
-            }).then(() => {
-              fweb.files.delete({
-                file: event.file_id
-              }).then(() => {
-                console.log("file deleted")
-              }).catch((error) => console.error(error))
-            }).catch((e) => {
-              console.error("Couldn't post link")
-              console.error(e);
-
+        file: event.file_id
+      })
+      .then((response) => {
+        console.log(`Found file uploaded: ${response.file.title} ID: ${event.file_id} of type ${response.file.mimetype}`)
+        //if it's an image we uplaod to imgur
+        if (response.file.mimetype.startsWith('image')) {
+          downloadFile(response.file.name, response.file.url_private)
+            .then((link) => {
+              let chan = response.file.is_public ? response.file.channels[0] : response.file.groups[0];
+              web.chat.postMessage({
+                  channel: chan,
+                  text: `Image uploaded from <@${response.file.user}>\n*${response.file.title}*:\n` + link
+                })
+                .then(() => {
+                  fweb.files.delete({
+                      file: event.file_id
+                    })
+                    .then(() => {
+                      console.log("file deleted")
+                    })
+                    .catch((error) => console.error(error))
+                })
+                .catch((e) => {
+                  console.error("Couldn't post link")
+                  console.error(e);
+                })
             })
-          }).catch((error) => console.log(error))
-        }).catch((error) => console.error(error))
-      }
-    }).catch((error) => {
-      console.error(error)
-    })
+            .catch((error) => console.log(error))
+        }
+      })
+      .catch((error) => console.error(error))
   }
 })
 
