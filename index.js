@@ -19,19 +19,19 @@ const fweb = new WebClient(userToken);
 const AS_USER = ['clap'];
 
 
-function getUsersName(userid) {
+function getUser(userid) {
   return new Promise((resolve, reject) => {
     web.users.info({
       user: userid
     }).then((res) => {
-      resolve(res.user.name)
+      resolve(res.user)
     }, (rej) => {
       reject(rej)
     });
   });
 }
 
-function willSendAsUser(commandText){
+function willSendAsUser(commandText) {
   var command = commandText.split(' ')[0];
   command = command.slice(1);
   return AS_USER.includes(command);
@@ -60,19 +60,32 @@ function commandRouter(command) {
     response = commands[comm](com.slice(1))
     return (response);
   } catch (exception) {
-    console.error(e);
-    return new Error();
+    console.error(exception);
+    return new Promise((resolve, reject) => {
+      if(exception instanceof TypeError) reject("That is not a command, my friend");
+      else reject(exception);
+    });
   }
 }
 
-function sendAsUser(textToSend, event){
-  return web.chat.postMessage({
-    channel : event.channel,
-    text : textToSend,
-    as_user : false,
-    icon_url : getUserPicture(event.user),
-    username : event.user
-  })
+function sendAsUser(textToSend, event) {
+  const currentU = event.user;
+  fweb.chat.delete({
+    channel: event.channel,
+    ts: event.ts,
+    as_user : true
+  }).then(
+    getUser(currentU).then((user) => {
+      console.log(event)
+      return fweb.chat.postMessage({
+        channel: event.channel,
+        text: textToSend,
+        as_user: false,
+        icon_url: user.profile.image_original,
+        username: user.profile.display_name
+      })
+    })
+  )
 }
 
 //Listen on all public channels for a message event
@@ -101,7 +114,7 @@ slackEvents.on('message', (event) => {
         // THEN we need to update this to express, so we have one combined middle wear and can break
         // out the different routes so there's one for just sending as user rather than a catch all
         // which will surely break with enough new features
-        if(willSendAsUser(event.text)) sendAsUser(res, event);
+        if (willSendAsUser(event.text)) sendAsUser(res, event);
         else web.chat.postMessage(message)
       }, rej => {
         web.chat.postEphemeral({
@@ -109,7 +122,7 @@ slackEvents.on('message', (event) => {
           user: event.user,
           text: rej
         })
-      }).then((status) => console.log(status.ts)).catch(console.error)
+      }).then((status) => console.log(status)).catch(console.error)
     }
   }
 });
@@ -161,10 +174,10 @@ slackEvents.on('app_mention', (event) => {
       text: ':b:hakis'
     }).then((status) => console.log(status.ts)).catch(console.error);
   } else {
-    getUsersName(event.user).then((res) => {
+    getUser(event.user).then((res) => {
       web.chat.postMessage({
         channel: event.channel,
-        text: 'Hello my flesh friend ' + res
+        text: 'Hello my flesh friend ' + res.profile.display_name
       }).then((status) => {
         console.log('Message sent', status.ts);
       }).catch(console.error);
