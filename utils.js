@@ -4,6 +4,12 @@ var imgur = require('imgur');
 
 module.exports = {
 
+  getUserPicture: function(userInfo) {
+    var url = userInfo.user.profile.image_original
+    url = url.replace('\/', '//');
+    return url
+  },
+
   downloadFile: function(fileName, fileURL) {
     return new Promise((resolve, reject) => {
     var fName = fileName.split(' ').join('_').toLowerCase();

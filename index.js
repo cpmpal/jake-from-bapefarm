@@ -1,6 +1,7 @@
 require('dotenv').config();
 const {
-  downloadFile
+  downloadFile,
+  getUserPicture
 } = require('./utils.js')
 const commands = require('./commands.js');
 const {
@@ -15,7 +16,7 @@ const userToken = process.env.SLACK_USER_TOKEN;
 const port = process.env.PORT || 3000
 const web = new WebClient(token);
 const fweb = new WebClient(userToken);
-
+const AS_USER = ['clap'];
 
 
 function getUsersName(userid) {
@@ -30,7 +31,11 @@ function getUsersName(userid) {
   });
 }
 
-
+function willSendAsUser(commandText){
+  var command = commandText.split(' ')[0];
+  command = command.strip(1);
+  return AS_USER.includes(command);
+}
 /*
  *
  * We get in the command with the command prefix.
@@ -60,6 +65,16 @@ function commandRouter(command) {
   }
 }
 
+function sendAsUser(textToSend, event){
+  return web.chat.postMessage({
+    channel : event.channel,
+    text : textToSend,
+    as_user : false,
+    icon_url : getUserPicture(event.user),
+    username : event.user
+  })
+}
+
 //Listen on all public channels for a message event
 slackEvents.on('message', (event) => {
   if (!event.hidden) {
@@ -80,7 +95,14 @@ slackEvents.on('message', (event) => {
           message.channel = event.channel;
           console.log(message);
         }
-        web.chat.postMessage(message)
+        // Check to see if in defined commands that given command should be sent as user
+        // This is fake on both the slack front, and from our front
+        // We need to build in permissions into jake to get permsission to send on behalf of user
+        // THEN we need to update this to express, so we have one combined middle wear and can break
+        // out the different routes so there's one for just sending as user rather than a catch all
+        // which will surely break with enough new features
+        if(willSendAsUser(event.text)) sendAsUser(res, event);
+        else web.chat.postMessage(message)
       }, rej => {
         web.chat.postEphemeral({
           channel: event.channel,
