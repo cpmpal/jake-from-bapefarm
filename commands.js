@@ -68,6 +68,7 @@ module.exports = {
 
   clap: function(claps) {
     return new Promise((resolve, reject) => {
+       console.log(claps)
        if(claps.length = 0) reject("Give :clap: me :clap: something :clap: to :clap: clap :clap: back");
        else {
          claps = claps.join(' :clap: ')
