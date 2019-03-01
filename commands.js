@@ -66,9 +66,8 @@ function rollADie(dieToRoll) {
 
 module.exports = {
 
-  clap: function(text) {
+  clap: function(claps) {
     return new Promise((resolve, reject) => {
-       var claps = text.split(' ');
        if(claps.length = 0) reject("Give :clap: me :clap: something :clap: to :clap: clap :clap: back");
        else {
          claps = claps.join(' :clap: ')
