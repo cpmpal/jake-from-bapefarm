@@ -71,9 +71,9 @@ module.exports = {
        console.log(claps)
        if(claps.length = 0) reject("Give :clap: me :clap: something :clap: to :clap: clap :clap: back");
        else {
-         claps = claps.join(' :clap: ')
-         claps = ":clap: "+claps+" :clap:"
-         resolve(claps)
+         var clap = claps.join(' :clap: ')
+         clap = ":clap: "+clap+" :clap:"
+         resolve(clap)
        }
     })
   },

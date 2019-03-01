@@ -33,7 +33,7 @@ function getUsersName(userid) {
 
 function willSendAsUser(commandText){
   var command = commandText.split(' ')[0];
-  command = command.strip(1);
+  command = command.slice(1);
   return AS_USER.includes(command);
 }
 /*
