@@ -13,7 +13,9 @@ memes and junk
     ex: $spell daylight
   * sarcasm: take the message given by the user and snake case every alpha within it. Pretty much, it's a shorthand for the sponge-gar meme
   * clap: add clap emojis where there are spaces in a message
+  
     ex. $clap why are you like this
+    
     response: :clap: why :clap: are :clap: you :clap: like :clap: this :clap:
 2. Auto functions:
   * imgur reupload:
