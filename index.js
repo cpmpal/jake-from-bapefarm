@@ -82,7 +82,7 @@ function sendAsUser(textToSend, event) {
         text: textToSend,
         as_user: false,
         icon_url: user.profile.image_original,
-        username: user.profile.display_name
+        username: user.profile.display_name?user.profile.display_name:user.name
       })
     })
   )
