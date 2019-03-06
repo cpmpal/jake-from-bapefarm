@@ -16,55 +16,17 @@ const {
 } = require('@slack/events-api');
 const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
 const port = process.env.PORT || 3000
-var placeholder = require('./out.js');
+var {commandProcessor} = require('./out.js');
 
 
-
-
-
-
-
-
-
-
-
-//Listen on all public channels for a message event
+//Listen on all public channels for a custom command
 slackEvents.on('message', (event) => {
   if (!event.hidden) {
     console.log(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
     if (event.text === undefined) {
       console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
     } else if (event.text.startsWith('$')) {
-      /*
-      commandRouter(event.text).then((res) => {
-        console.log(res)
-        let message;
-        if (typeof(res) === "string") {
-          message = {
-            channel: event.channel,
-            text: res
-          }
-        } else {
-          message = res;
-          message.channel = event.channel;
-          console.log(message);
-        }
-        // Check to see if in defined commands that given command should be sent as user
-        // This is fake on both the slack front, and from our front
-        // We need to build in permissions into jake to get permsission to send on behalf of user
-        // THEN we need to update this to express, so we have one combined middle wear and can break
-        // out the different routes so there's one for just sending as user rather than a catch all
-        // which will surely break with enough new features
-        if (willSendAsUser(event.text)) sendAsUser(res, event);
-        else web.chat.postMessage(message)
-      }, rej => {
-        web.chat.postEphemeral({
-          channel: event.channel,
-          user: event.user,
-          text: rej
-        })
-      }).then((status) => console.log(status)).catch(console.error)
-      */
+      commandProcessor(event);
     }
   }
 });
