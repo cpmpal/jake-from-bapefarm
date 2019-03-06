@@ -16,7 +16,7 @@ const userToken = process.env.SLACK_USER_TOKEN;
 const port = process.env.PORT || 3000
 const web = new WebClient(token);
 const fweb = new WebClient(userToken);
-const AS_USER = ['clap'];
+const AS_USER = ['clap', 'sarcasm'];
 
 
 function getUser(userid) {
@@ -82,7 +82,7 @@ function sendAsUser(textToSend, event) {
         text: textToSend,
         as_user: false,
         icon_url: user.profile.image_original,
-        username: user.profile.display_name?user.profile.display_name:user.name 
+        username: user.profile.display_name
       })
     })
   )
