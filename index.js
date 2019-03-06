@@ -1,3 +1,10 @@
+/*
+
+  Here's where were keeping all the incoming routes from slack and middleware.
+  For any of the outgoing requests we'll look at out.js to keep Events and Web
+  APIs seperate from each other
+
+*/
 require('dotenv').config();
 const {
   downloadFile,
@@ -8,85 +15,18 @@ const {
   createEventAdapter
 } = require('@slack/events-api');
 const slackEvents = createEventAdapter(process.env.SLACK_SIGNING_SECRET);
-const {
-  WebClient
-} = require('@slack/client');
-const token = process.env.SLACK_TOKEN;
-const userToken = process.env.SLACK_USER_TOKEN;
 const port = process.env.PORT || 3000
-const web = new WebClient(token);
-const fweb = new WebClient(userToken);
-const AS_USER = ['clap', 'sarcasm'];
+var placeholder = require('./out.js');
 
 
-function getUser(userid) {
-  return new Promise((resolve, reject) => {
-    web.users.info({
-      user: userid
-    }).then((res) => {
-      resolve(res.user)
-    }, (rej) => {
-      reject(rej)
-    });
-  });
-}
 
-function willSendAsUser(commandText) {
-  var command = commandText.split(' ')[0];
-  command = command.slice(1);
-  return AS_USER.includes(command);
-}
-/*
- *
- * We get in the command with the command prefix.
- * We strip the arugments and the command. We then
- * route into the appropriate command by calling it directly
- * from the commands module that is exported
- *
- * If the command doesn't exist we throw an exception and
- * tell the user. We post the exact error in the log in case
- * something else went wrong because ES6 is not thorough enough
- * to now if it definitively has the right error message versus
- * just breaking the bot/app
- */
-function commandRouter(command) {
-  let response;
-  let com = command.split(' ');
-  comm = com[0].substring(1);
-  console.log(`Command received ${comm}. Filtering to appropriate promise`);
-  try {
-    console.log(commands[comm]);
-    console.log(com);
-    response = commands[comm](com.slice(1))
-    return (response);
-  } catch (exception) {
-    console.error(exception);
-    return new Promise((resolve, reject) => {
-      if(exception instanceof TypeError) reject("That is not a command, my friend");
-      else reject(exception);
-    });
-  }
-}
 
-function sendAsUser(textToSend, event) {
-  const currentU = event.user;
-  fweb.chat.delete({
-    channel: event.channel,
-    ts: event.ts,
-    as_user : true
-  }).then(
-    getUser(currentU).then((user) => {
-      console.log(event)
-      return fweb.chat.postMessage({
-        channel: event.channel,
-        text: textToSend,
-        as_user: false,
-        icon_url: user.profile.image_original,
-        username: user.profile.display_name?user.profile.display_name:user.name
-      })
-    })
-  )
-}
+
+
+
+
+
+
 
 //Listen on all public channels for a message event
 slackEvents.on('message', (event) => {
@@ -95,6 +35,7 @@ slackEvents.on('message', (event) => {
     if (event.text === undefined) {
       console.log(`event subtype: ${event.subtype} hidden: ${event.hidden}`);
     } else if (event.text.startsWith('$')) {
+      /*
       commandRouter(event.text).then((res) => {
         console.log(res)
         let message;
@@ -123,6 +64,7 @@ slackEvents.on('message', (event) => {
           text: rej
         })
       }).then((status) => console.log(status)).catch(console.error)
+      */
     }
   }
 });
@@ -130,6 +72,7 @@ slackEvents.on('message', (event) => {
 slackEvents.on('file_shared', (event) => {
   console.log(event);
   if (event.file_id !== undefined) {
+    /*
     web.files.info({
         file: event.file_id
       })
@@ -162,6 +105,7 @@ slackEvents.on('file_shared', (event) => {
         }
       })
       .catch((error) => console.error(error))
+    */
   }
 })
 
@@ -169,11 +113,14 @@ slackEvents.on('file_shared', (event) => {
 // Place holder testing to say hello and memes
 slackEvents.on('app_mention', (event) => {
   if (event.text.includes('wearing')) {
+    /*
     web.chat.postMessage({
       channel: event.channel,
       text: ':b:hakis'
     }).then((status) => console.log(status.ts)).catch(console.error);
+    */
   } else {
+    /*
     getUser(event.user).then((res) => {
       web.chat.postMessage({
         channel: event.channel,
@@ -182,6 +129,7 @@ slackEvents.on('app_mention', (event) => {
         console.log('Message sent', status.ts);
       }).catch(console.error);
     }, () => console.error);
+    */
   }
 });
 
