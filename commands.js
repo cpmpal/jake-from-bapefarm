@@ -1,5 +1,9 @@
 const spells = require('./spells.js');
 
+function isAlpha(p) {
+  return /[A-Za-z]/.test(p)
+}
+
 function rollDice(diceSide) {
   return Math.floor(Math.random() * (diceSide) + 1);
 }
@@ -74,6 +78,28 @@ module.exports = {
          clap = ":clap: "+clap+" :clap:";
          resolve(clap);
        }
+    })
+  },
+
+  sarcasm: function(likeTheText) {
+    return new Promise((resolve, reject) => {
+      var tExT = likeTheText.join(' ');
+      var result = "";
+      if(!isAlpha(tExT)) reject ("I cAn'T sArCaStIfY tHaT, nErD");
+      else {
+        var flip = (tExT[0] === tExT[0].toUpperCase());
+        for (var i in tExT) {
+          if(isAlpha(tExT[i])) {
+            if(flip) result += tExT[i].toLowerCase();
+            else result += tExT[i].toUpperCase();
+            flip = !flip
+          }
+          else {
+            result += tExT[i];
+          }
+        }
+        resolve(result);
+      }
     })
   },
 
