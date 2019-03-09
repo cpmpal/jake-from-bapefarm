@@ -23,7 +23,7 @@ module.exports = {
       imgur._imgurRequest('upload', f)
         .then((json) => {
           console.log(`File: ${fileName} uploaded successfully to imgur\nAt link ${json.data.link}`);
-          resolve(json.data.link)
+          resolve(json.data)
         })
         .catch((json) => {
           console.log(`Couldn't upload file to imgur`);

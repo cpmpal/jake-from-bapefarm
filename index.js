@@ -138,11 +138,11 @@ slackEvents.on('file_shared', (event) => {
         //if it's an image we uplaod to imgur
         if (response.file.mimetype.startsWith('image')) {
           downloadFile(response.file.name, response.file.url_private)
-            .then((link) => {
+            .then((data) => {
               let chan = response.file.is_public ? response.file.channels[0] : response.file.groups[0];
               web.chat.postMessage({
                   channel: chan,
-                  text: `Image uploaded from <@${response.file.user}>\n*${response.file.title}*:\n` + link
+                  text: `Image uploaded from <@${response.file.user}>\n*${response.file.title}*:\n` + data.link
                 })
                 .then(() => {
                   fweb.files.delete({
@@ -152,6 +152,14 @@ slackEvents.on('file_shared', (event) => {
                       console.log("file deleted")
                     })
                     .catch((error) => console.error(error))
+                })
+                .then(() => {
+                  web.chat.postEphemeral({
+                    channel: event.channel_id,
+                    user: event.user_id,
+                    text: `If you want to delete this image go to imgur.com/delete/${data.deletehash}`,
+                    as_user: false
+                  }).catch((e) => {console.error(`Couldn't post imgur deletion link\nHash: ${data.deletehash}`); console.error(e);})
                 })
                 .catch((e) => {
                   console.error("Couldn't post link")
