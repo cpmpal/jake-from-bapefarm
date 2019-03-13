@@ -31,4 +31,4 @@ More functions are still being developed as of this commit.
 #### Auto functions:
   * imgur reupload:
     When an image, specifically listed as MIME/image, is uploaded to slack, Jake downloads it, re-uploads it to imgur, and deletes the original. This is to make the use of uploading files more impactful so we don't waste file space with just reposting screenshots.
-
+ 
