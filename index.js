@@ -185,7 +185,7 @@ slackEvents.on('app_mention', (event) => {
     getUser(event.user).then((res) => {
       web.chat.postMessage({
         channel: event.channel,
-        text: 'Hello my flesh friend ' + res.profile.display_name
+        text: 'Hello my flesh friend ' + res.profile.display_name?res.profile.display_name:res.name
       }).then((status) => {
         console.log('Message sent', status.ts);
       }).catch(console.error);
