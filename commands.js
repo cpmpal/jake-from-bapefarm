@@ -29,8 +29,8 @@ function rollADie(dieToRoll) {
   else {
     dice = Number.parseInt(d[2]);
     if (d[1] !== "") number = Number.parseInt(d[1]);
-    if (number > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
     else number = 1;
+    if (number > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
     for (let i = 0; i < number; i++) {
       rollArray.push(rollDice(dice));
     }
