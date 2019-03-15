@@ -15,7 +15,7 @@ More functions are still being developed as of this commit.
   All of jake's user functions are called by prepending with a '$' right before so that he can filter only messages that matter. At some point with the express rework we will implement traditional / command calls so as to make Jake more compliant and worthy of his khakis
   <ul>
  <li><b>spell</b>:</li>
- <p>    Using the <a hre"http://www.dnd5eapi.co">dnd5eapi.co</a> look up a DnD 5e spell listed in the SRD. The SRD is limited so there are some PHB spells missing, and mostly everything in the expansion books. The command will look to correct capitlization as the 5e API is matches names strictly. Most every preposition use in spells like "dispel evil and good" below will work; however, there is no globbing, so dispel good and evil will return nothing. That is shown below the first example:</p>
+ <p>    Using the <a href="http://www.dnd5eapi.co">dnd5eapi.co</a> look up a DnD 5e spell listed in the SRD. The SRD is limited so there are some PHB spells missing, and mostly everything in the expansion books. The command will look to correct capitlization as the 5e API is matches names strictly. Most every preposition use in spells like "dispel evil and good" below will work; however, there is no globbing, so dispel good and evil will return nothing. That is shown below the first example:</p>
   
   <p align="center">
   <img src="https://user-images.githubusercontent.com/11484030/54308429-613f4400-45a4-11e9-9496-892afda5956f.PNG">
