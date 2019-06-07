@@ -214,7 +214,10 @@ module.exports = {
         .then(($) => {
           // Check if non-SRD
           //console.log($('head > title').text())
-          if($('head > title').text().includes('Marketplace')) reject("Sorry, I haven't paid for that book yet"); 
+          if($('head > title').text().includes('Marketplace')) {
+            let book = $('head > title').text().slice(0,$('head > title').text().indexOf('-')-1);
+            reject("Sorry, I haven't paid for " + book + " yet");
+          }
           // is SRD
           else resolve(this.getSpellDetails($));
         }, (failed) => reject("A little too much guano and ruby dust in the spellbook. Try incanting again"))
@@ -257,10 +260,9 @@ module.exports = {
         .then((spell) => {
           mess = buildMessage(spell)
           resolve(mess)
-        },
-        (fail) => reject(fail))
-        }).catch((error) => reject(error));
+        }).catch((e) => reject(e));
+    })
   }
 }
 
-module.exports.makeSpell('transmute rock').then((spell) => console.log(spell))
+//module.exports.makeSpell('transmute rock').then((spell) => console.log(spell))
