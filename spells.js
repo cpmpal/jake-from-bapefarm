@@ -49,7 +49,7 @@ class Spell {
     this.desc = desc;
     this.page = page;
     this.range = range;
-    this.components = components;
+    this.components = components.replace('*','');
     this.material = material.substring(material.indexOf('(')+1,material.indexOf(')'));
     this.ritual = ritual;
     this.duration = duration;
@@ -158,7 +158,7 @@ function buildMessage(givenSpell) {
         },
         {
           "title": "Components",
-          "value": givenSpell.components.join(' '),
+          "value": givenSpell.components,
           "short": true
         },
         {
@@ -227,6 +227,7 @@ module.exports = {
   },
 
   getSpellDetails: function($) {
+    //console.log($)
     let s = new Spell(
       0, //INDEX
       $('.page-title').text().trim(), //NAME
@@ -253,16 +254,13 @@ module.exports = {
     return new Promise((resolve, reject) => {
       var mess;
       this.requestSpell(spell)
-        .then((uri) => this.getSpellDetails(uri),
-        (fail) => reject(fail))
-          .then((spellObject) => {
-            //console.log(spellObject.toString())
-            mess = buildMessage(spellObject);
-            //console.log(mess);
-            resolve(mess);
-          }).catch((error) => reject(error));
-    })
+        .then((spell) => {
+          mess = buildMessage(spell)
+          resolve(mess)
+        }),
+        (fail) => reject(fail)
+        }).catch((error) => reject(error));
   }
 }
 
-//module.exports.requestSpell('transmute rock').then((spell) => console.log(spell))
+module.exports.makeSpell('transmute rock').then((spell) => console.log(spell))
