@@ -1,4 +1,5 @@
-const request = require('request-promise-native');
+var request = require('request-promise-native');
+var cheerio = require('cheerio')
 const utils = require('./utils.js');
 var capitalize = utils.capitalize;
 
@@ -24,6 +25,22 @@ const schoolColor = {
   'Illusion': "#B662E7"
 }
 
+const MAIN_CLASS = [
+  'Artificer',
+  'Bard',
+  'Barbarian',
+  'Blood Hunter',
+  'Cleric',
+  'Druid',
+  'Fighter',
+  'Monk',
+  'Paladin',
+  'Ranger',
+  'Rogue',
+  'Sorcerer',
+  'Warlock',
+  'Wizard'
+]
 
 class Spell {
   constructor(index, name, desc, page, range, components, material, ritual, duration, concentration, casting_time, level, school, classes, subclasses, url) {
@@ -33,16 +50,17 @@ class Spell {
     this.page = page;
     this.range = range;
     this.components = components;
-    this.material = material;
+    this.material = material.substring(material.indexOf('(')+1,material.indexOf(')'));
     this.ritual = ritual;
     this.duration = duration;
     this.level = level;
     this.casting_time = casting_time;
     this.concentration = concentration;
-    this.school = school.name;
-    this.url = url;
-    this.classes = classes.map(c => c['name']);
-    this.subclasses = subclasses.map(subclass => subclass['name']);
+    this.school = school;
+    this.url = this.dndSpellLink();
+    this.classes = classes.filter(c => MAIN_CLASS.includes(c));
+    this.subclasses = classes.filter(c => !MAIN_CLASS.includes(c));
+    //this.subclasses = subclasses.map(subclass => subclass['name']);
   }
 
   isRitual() {
@@ -67,8 +85,7 @@ class Spell {
 
   dndSpellLink(){
     let name = this.name;
-    name = name.toLowerCase().split(' ');
-    name = name.join('-');
+    name = name.toLowerCase().replace("'","").replace('\\'," ").replace('/'," ").split(' ').join('-');
     return "https://www.dndbeyond.com/spells/"+name
   }
 
@@ -121,7 +138,7 @@ function buildMessage(givenSpell) {
       "text": givenSpell.desc.join('\n'),
       "fields": [{
           "title": "Level & School",
-          "value": givenSpell.levelAndSchool(),
+          "value": givenSpell.level +" Lvl "+givenSpell.school,
           "short": true
         },
         {
@@ -173,6 +190,8 @@ function buildMessage(givenSpell) {
 
 module.exports = {
   makeSpellOpts: function(spellName) {
+    var sname = spellName.toLowerCase().replace("'","").replace('\\'," ").replace('/'," ").split(' ').join('-')
+    /*
     let dontCapitalize = ['of', 'with', 'and', 'from', 'without', 'the']
     spellName = spellName.split(' ');
     spellName.forEach((name, i, namepart) => {
@@ -180,9 +199,11 @@ module.exports = {
       //console.log(name)
     });
     spellName = spellName.join('+');
+    */
     let spellOptions = {
-      uri: 'http://dnd5eapi.co/api/spells/?name=' + spellName,
-      json: true
+      //uri: 'http://dnd5eapi.co/api/spells/?name=' + spellName,
+      uri: 'https://www.dndbeyond.com/spells/'+ sname,
+      transform: (body) => cheerio.load(body)
     };
     return spellOptions;
   },
@@ -190,12 +211,13 @@ module.exports = {
   requestSpell: function(spellName) {
     return new Promise((resolve, reject) => {
       request(this.makeSpellOpts(spellName))
-        .then((parsedBody) => {
-          // Succeeded
-          console.log(parsedBody)
-          if(parsedBody['count'] === 0) reject("Explosive runes blind you. Make a race saving throw");
-          else resolve(parsedBody['results'][0]['url']);
-        }, (failed) => reject("Explosive runes blind you. Make a race saving throw"))
+        .then(($) => {
+          // Check if non-SRD
+          //console.log($('head > title').text())
+          if($('head > title').text().includes('Marketplace')) reject("Sorry, I haven't paid for that book yet"); 
+          // is SRD
+          else resolve(this.getSpellDetails($));
+        }, (failed) => reject("A little too much guano and ruby dust in the spellbook. Try incanting again"))
         .catch((err) => {
           // Failed
           console.error(err)
@@ -204,38 +226,27 @@ module.exports = {
     })
   },
 
-  getSpellDetails: function(url) {
-    return new Promise((resolve, reject) => {
-      request({
-          uri: url,
-          json: true
-        })
-        .then((spellBlob) => {
-          let s = new Spell(
-            spellBlob['index'],
-            spellBlob['name'],
-            spellBlob['desc'],
-            spellBlob['page'],
-            spellBlob['range'],
-            spellBlob['components'],
-            spellBlob['material'],
-            spellBlob['ritual'],
-            spellBlob['duration'],
-            spellBlob['concentration'],
-            spellBlob['casting_time'],
-            spellBlob['level'],
-            spellBlob['school'],
-            spellBlob['classes'],
-            spellBlob['subclasses'],
-            spellBlob['url']
-          );
-          resolve(s);
-        })
-        .catch((err) => {
-          console.error(err);
-          reject(err);
-        })
-    })
+  getSpellDetails: function($) {
+    let s = new Spell(
+      0, //INDEX
+      $('.page-title').text().trim(), //NAME
+      $('.more-info-content').text().trim().split(/\n/).map(phrase => phrase.trim()).filter(phrase => phrase !== "" && !phrase.startsWith('*')), //DESC
+      $('.source.spell-source').text().trim().replace(/\W{3,}/g, ' '), //PAGE
+      ($('.ddb-statblock-item-range-area > .ddb-statblock-item-value').contents().toArray()[0].nodeValue.trim())+" "+$('.aoe-size').contents().toArray().map(n => 
+        n.nodeType !== 1? n.nodeValue : n.attribs.class.slice(n.attribs.class.lastIndexOf('-')+1)).join(""), //RANGE
+      $('.component-asterisks').text(), //COMPONENTS
+      $('.components-blurb').text(), //MATERIAL
+      $('.ddb-statblock-item-casting-time > .ddb-statblock-item-value')[0].childNodes.length > 1? 'yes':'no', //RITUAL
+      $('.ddb-statblock-item-duration > .ddb-statblock-item-value').text().trim(), // DURATION
+      $('.ddb-statblock-item-duration > .ddb-statblock-item-value')[0].childNodes.length > 1? 'yes':'no', //CONCENTRATION
+      $('.ddb-statblock-item-casting-time > .ddb-statblock-item-value').text().trim(), //CASTING TIME
+      $('.ddb-statblock-item-level > .ddb-statblock-item-value').text().trim(), //LEVEL
+      $('.ddb-statblock-item-school > .ddb-statblock-item-value').text().trim(), //SCHOOL
+      $('.tags.available-for').children().toArray().map(x => x.children[0].data), //CLASSES
+      "", //SUBCLASSES
+      "" //URL
+    )
+    return s
   },
 
   makeSpell: function(spell) {
@@ -253,3 +264,5 @@ module.exports = {
     })
   }
 }
+
+//module.exports.requestSpell('transmute rock').then((spell) => console.log(spell))
