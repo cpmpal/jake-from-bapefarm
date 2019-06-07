@@ -257,8 +257,8 @@ module.exports = {
         .then((spell) => {
           mess = buildMessage(spell)
           resolve(mess)
-        }),
-        (fail) => reject(fail)
+        },
+        (fail) => reject(fail))
         }).catch((error) => reject(error));
   }
 }
