@@ -148,7 +148,7 @@ function buildMessage(givenSpell) {
         },
         {
           "title": "Duration",
-          "value": givenSpell.duration,
+          "value": givenSpell.duration+givenSpell.concentration? ' Conc' : '' ,
           "short": true
         },
         {
@@ -241,8 +241,8 @@ module.exports = {
       $('.component-asterisks').text(), //COMPONENTS
       $('.components-blurb').text(), //MATERIAL
       $('.ddb-statblock-item-casting-time > .ddb-statblock-item-value')[0].childNodes.length > 1? 'yes':'no', //RITUAL
-      $('.ddb-statblock-item-duration > .ddb-statblock-item-value').text().trim(), // DURATION
-      $('.ddb-statblock-item-duration > .ddb-statblock-item-value')[0].childNodes.length > 1? 'yes':'no', //CONCENTRATION
+      $('.ddb-statblock-item-duration > .ddb-statblock-item-value').contents().last().text().trim(), // DURATION
+      $('.ddb-statblock-item-duration > .ddb-statblock-item-value')[0].childNodes.length > 1? true : false, //CONCENTRATION
       $('.ddb-statblock-item-casting-time > .ddb-statblock-item-value').text().trim(), //CASTING TIME
       $('.ddb-statblock-item-level > .ddb-statblock-item-value').text().trim(), //LEVEL
       $('.ddb-statblock-item-school > .ddb-statblock-item-value').text().trim(), //SCHOOL
