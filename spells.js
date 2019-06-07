@@ -148,7 +148,7 @@ function buildMessage(givenSpell) {
         },
         {
           "title": "Duration",
-          "value": givenSpell.duration+givenSpell.concentration? ' Conc' : '' ,
+          "value": givenSpell.duration+""+(givenSpell.concentration? ' Conc' : ''),
           "short": true
         },
         {
