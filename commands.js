@@ -8,64 +8,170 @@ function rollDice(diceSide) {
   return Math.floor(Math.random() * (diceSide) + 1);
 }
 
+function convAdv(roll){
+  return Number.parseInt(roll.slice(1).slice(0, -1))
+}
+
+function fillArray(value, l){
+  let tmp = Array.from({length: l}, (e, i) => value);
+  //console.log(tmp);
+  return tmp;
+}
+
+function halflingDice(rollArr, advType, advNum) {
+  let rollSort = rollArr.slice()
+  let advRoll = [];
+  switch(advType) {
+    case "A":
+      rollSort.sort((a, b) => b - a)
+      break;
+    case "D":
+      rollSort.sort((a, b) => a - b)
+      break;
+    case "E":
+      let avg = (rollArr.reduce((a, b) => a + b, 0))/rollArr.length;
+      rollSort.sort((a, b) => Math.abs(avg - a) - Math.abs(avg - b))
+      break;
+    default:
+      return new Error(`Could not parse advantage type of ${advType}`);
+      break;
+    }
+  advRoll = rollSort.map((e, i) => (i < advNum)? "*"+e+"*":e)
+  return advRoll;
+}
+
 function rollADie(dieToRoll) {
+  var rollArray = [];
+  //console.log(dieToRoll)
+  //console.log(typeof(dieToRoll))
   const die = dieToRoll.slice();
-  let modifier;
-  let modReg = /(\+|\-)\d*/g
+  let diceReg = /((\+|\-?)((\d*)([ADE]))?(\d*)(d)(\d*))|((\+|\-)([0-9]+)d{0})/g
   let advantage;
-  let advReg = /(\d*)(A|D)/g
+  let ad;
   let d;
   let dice;
   let number;
-  let dieReg = /(\d*)d(\d*)/g
 
-  var rollArray = [];
-  modifier = modReg.exec(die);
-  if (modifier === null) modifier = 0;
-  else modifier = Number.parseInt(modifier[0]);
-  advantage = advReg.exec(die);
-  d = dieReg.exec(die);
-  if (d === null) return new Error(`cannot read die of type XdY from string ${die}`);
-  else {
-    dice = Number.parseInt(d[2]);
-    if (d[1] !== "") number = Number.parseInt(d[1]);
-    else number = 1;
-    if (number > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
-    for (let i = 0; i < number; i++) {
-      rollArray.push(rollDice(dice));
-    }
-    var sum = rollArray.reduce((a, b) => a + b, 0);
-    sum = sum + modifier;
-    // Identify high and low rolls
-    if (advantage !== null) {
-      let advRoll = []
-      let aRoll;
-      if (advantage[1] === "") aRoll = 1;
-      else aRoll = Number.parseInt(advantage[1]);
-      if (advantage[2] === "A") {
-        //max
-        for (let i = 0; i < aRoll; i++) {
-          let max = Math.max(...rollArray)
-          while (rollArray.indexOf(max) >= 0) advRoll.push(rollArray.splice(rollArray.indexOf(max), 1));
+  /*
+    1 - Full Dice string
+    2 - Preceding plus on dice
+    3 - advantage/disadvantage string
+    4 - adv/dis Number
+    5 - adv/dis type
+    6 - Number of die
+    7 - d for dice
+    8 - Dice sides
+    9 - Modifier string
+    10 - Modifier sign
+    11 - Modifier number
+  */
+
+  d = Array.from(die.matchAll(diceReg))
+
+  for (const dieMatch of d){
+    //console.log(rollArray);
+    //Was there a successful match?
+    if (dieMatch === null || dieMatch === undefined) return new Error(`cannot read die of type XdY from string ${die}`);
+    else {
+      //Check if first of compound roll
+      if(dieMatch[2] !== "" && rollArray.length < 1) return new Error(`Cannot roll dice. Unexepected modifier ${dieMatch[2]} before any roll performed`);
+      else {
+        //We have a good first roll time to cycle through each
+
+        //Perform modifier calc
+        if(dieMatch[11] !== undefined){
+          let mod = Number.parseInt(dieMatch[9])
+          rollArray.forEach((roll, ind) => {
+            if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+mod)+"*"
+            else rollArray[ind] = roll+mod
+          })
         }
-      } else {
-        //min
-        for (let i = 0; i < aRoll; i++) {
-          let min = Math.min(...rollArray)
-          while (rollArray.indexOf(min) >= 0) advRoll.push(rollArray.splice(rollArray.indexOf(min), 1));
+
+        //Perform a dice roll
+        if(dieMatch[1] !== undefined) {
+          dice = dieMatch[6]!==""?Number.parseInt(dieMatch[6]):1
+          if (dice > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
+          let initRoll = Array.from({length: dice}, (e, i) => rollDice(Number.parseInt(dieMatch[8])));
+          if(dieMatch[3] !== undefined){
+            advantage = true;
+            ad = dieMatch[4]!==""?Number.parseInt(dieMatch[4]):1
+            initRoll = halflingDice(initRoll, dieMatch[5], ad)
+          }
+          console.log(initRoll);
+          if(dieMatch[2] !== ""){
+            let innerSum = initRoll.reduce((a, b) => a + b, 0)
+            switch (dieMatch[2]) {
+              case "+":
+                rollArray.forEach((roll, ind) => {
+                  if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+innerSum)+"*"
+                  else rollArray[ind] = roll+innerSum
+                })
+              break;
+              case "-":
+                rollArray.forEach((roll, ind) => {
+                  if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)-innerSum)+"*"
+                  else rollArray[ind] = roll-innerSum
+                })
+              break;
+              default:
+                rollArray.forEach((roll, ind) => {
+                  if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+innerSum)+"*"
+                  else rollArray[ind] = roll+innerSum
+                })
+              break;
+            }
+          } else {
+            rollArray.push(...initRoll)
+          }
+
+          // Keeping it for revert
+          // if(dieMatch[2] !== ""){
+          //   switch (dieMatch[2]) {
+          //     case "+":
+          //       rollArray = rollArray.flatMap( (r) =>
+          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
+          //       )
+          //       break;
+          //     case "-":
+          //       rollArray = rollArray.flatMap( (r) =>
+          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e-(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e-initRoll[i]:(e-convAdv(initRoll[i])))
+          //       )
+          //     break;
+          //     default:
+          //       rollArray = rollArray.flatMap( (r) =>
+          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
+          //       )
+          //     break;
+          //   }
+          // } else {
+          //   rollArray.push(...initRoll)
+          // }
         }
       }
-      // flag the advantage and disadvantage die
-      advRoll.forEach((ele) => {
-        rollArray.push('*' + ele + '*');
-      })
     }
-    rollArray.push(' _Sum: ' + sum + '_');
-    console.log(rollArray);
-    return rollArray;
   }
-}
+  //Sort array
+  if(advantage) {
+    rollArray.sort(function(a, b) {
+    	  if (Number.isInteger(a) && Number.isInteger(b)) return b - a
+      	else if (!Number.isInteger(a) && !Number.isInteger(b)) return convAdv(b) - convAdv(a)
+      	else if (!Number.isInteger(a) && Number.isInteger(b)) return -1
+      	else if (Number.isInteger(a) && !Number.isInteger(b)) return 1
+      	else return 0
+      })
+  }
 
+  let sum;
+  if(advantage) sum = rollArray.filter((e) => !Number.isInteger(e)).reduce((a, b) => a + convAdv(b), 0)
+  else sum = rollArray.reduce((a, b) => a + b, 0)
+
+  rollArray.push(' _Sum: ' + sum + '_');
+  console.log(rollArray);
+  return rollArray;
+}
 
 
 module.exports = {
@@ -145,4 +251,10 @@ module.exports = {
     })
   }
 
+  // testing purposes
+  //,
+  //rollADie: rollADie
+
 }
+
+require('make-runnable');
