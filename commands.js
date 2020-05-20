@@ -1,4 +1,26 @@
 const spells = require('./spells.js');
+const { species, parties, places } = require('fantastical');
+
+const dndRaces = {
+  "Goblin":"goblin",
+  "Orc":"orc",
+  "Bugbear":"ogre",
+  "Firbolg":"cavePerson",
+  "Dwarf":"dwarf",
+  "Halfling":"halfling",
+  "Gnome":"gnome",
+  "Elf":"elf",
+  "Half-Elf":"highelf",
+  "Tabaxi":"fairy",
+  "Aarakocra":"highfairy",
+  "Goliath":"darkelf",
+  "Drow":"drow",
+  "Half-Orc":"halfdemon",
+  "Tiefling":"demon",
+  "Dragonborn":"dragon",
+  "Aasimar":"angel",
+  "Human":"human"
+};
 
 function isAlpha(p) {
   return /[A-Za-z]/.test(p)
@@ -38,6 +60,33 @@ function halflingDice(rollArr, advType, advNum) {
     }
   advRoll = rollSort.map((e, i) => (i < advNum)? "*"+e+"*":e)
   return advRoll;
+}
+
+class Character {
+
+  constructor() {
+    let races = Object.keys(dndRaces);
+    let raceRoll = rollDice(18)-1;
+    //console.log(raceRoll)
+    //console.log(dndRaces[races[raceRoll]])
+    this.r = races[raceRoll];
+    if (dndRaces[races[raceRoll]] === "human") this.name = species[dndRaces[races[raceRoll]]]({ allowMultipleNames: true });
+    else if (['goblin', 'orc', 'ogre', 'demon'].includes(dndRaces[races[raceRoll]])) this.name = species[dndRaces[races[raceRoll]]]();
+    else this.name = species[dndRaces[races[raceRoll]]](rollDice(2)==1?'male':'female');
+
+    let ps = ['militaryUnit', 'mysticOrder', 'guild'];
+    //console.log(ps[rollDice(3)-1])
+    this.party = parties[ps[rollDice(3)-1]]()
+    this.tavern = places.tavern();
+  }
+
+  toString(){
+    return "You meet " + this.name + ", the " + this.r + ", of The " + this.party + " in the corner of The " + this.tavern + "\n"
+  }
+}
+
+function makeAChar(){
+
 }
 
 function rollADie(dieToRoll) {
@@ -229,6 +278,37 @@ module.exports = {
       } catch (e) {
         reject(e);
       }
+    })
+  },
+
+  char: function() {
+    return new Promise((resolve, reject) => {
+      let newChar = new Character();
+      let output = newChar.toString()+"=====================================================\n"
+      for (let k = 1; k <= 6; k++){
+        switch(k){
+          case 1:
+          //console.log(rollADie('3A4d6').slice(-1))
+          output+=" STR:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+          case 2:
+          output+=" DEX:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+          case 3:
+          output+=" CON:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+          case 4:
+          output+=" INT:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+          case 5:
+          output+=" WIS:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+          case 6:
+          output+=" CHA:"+rollADie('3A4d6').slice(-1)[0].replace(/_Sum: (\d+)_/g, '$1')
+          break;
+        }
+      }
+      resolve(output);
     })
   },
 
