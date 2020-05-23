@@ -45,19 +45,19 @@ function halflingDice(rollArr, advType, advNum) {
   let advRoll = [];
   switch(advType) {
     case "A":
-      rollSort.sort((a, b) => b - a)
-      break;
+    rollSort.sort((a, b) => b - a)
+    break;
     case "D":
-      rollSort.sort((a, b) => a - b)
-      break;
+    rollSort.sort((a, b) => a - b)
+    break;
     case "E":
-      let avg = (rollArr.reduce((a, b) => a + b, 0))/rollArr.length;
-      rollSort.sort((a, b) => Math.abs(avg - a) - Math.abs(avg - b))
-      break;
+    let avg = (rollArr.reduce((a, b) => a + b, 0))/rollArr.length;
+    rollSort.sort((a, b) => Math.abs(avg - a) - Math.abs(avg - b))
+    break;
     default:
-      return new Error(`Could not parse advantage type of ${advType}`);
-      break;
-    }
+    return new Error(`Could not parse advantage type of ${advType}`);
+    break;
+  }
   advRoll = rollSort.map((e, i) => (i < advNum)? "*"+e+"*":e)
   return advRoll;
 }
@@ -101,7 +101,9 @@ function rollADie(dieToRoll) {
   let dice;
   let number;
 
-  /*
+  if(dieToRoll !== "" && (dieToRoll.includes("d") || dieToRoll.includes('D'))) {
+
+    /*
     1 - Full Dice string
     2 - Preceding plus on dice
     3 - advantage/disadvantage string
@@ -113,104 +115,110 @@ function rollADie(dieToRoll) {
     9 - Modifier string
     10 - Modifier sign
     11 - Modifier number
-  */
+    */
 
-  d = Array.from(die.matchAll(diceReg))
+    d = Array.from(die.matchAll(diceReg))
 
-  for (const dieMatch of d){
-    //console.log(rollArray);
-    //Was there a successful match?
-    if (dieMatch === null || dieMatch === undefined) return new Error(`cannot read die of type XdY from string ${die}`);
-    else {
-      //Check if first of compound roll
-      if(dieMatch[2] !== "" && rollArray.length < 1) return new Error(`Cannot roll dice. Unexepected modifier ${dieMatch[2]} before any roll performed`);
+    for (const dieMatch of d){
+      //console.log(rollArray);
+      //Was there a successful match?
+      if (dieMatch === null || dieMatch === undefined) return new Error(`cannot read die of type XdY from string ${die}`);
       else {
-        //We have a good first roll time to cycle through each
+        //Check if first of compound roll
+        if(dieMatch[2] !== "" && rollArray.length < 1) return new Error(`Cannot roll dice. Unexepected modifier ${dieMatch[2]} before any roll performed`);
+        else {
+          //We have a good first roll time to cycle through each
 
-        //Perform modifier calc
-        if(dieMatch[11] !== undefined){
-          let mod = Number.parseInt(dieMatch[9])
-          rollArray.forEach((roll, ind) => {
-            if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+mod)+"*"
-            else rollArray[ind] = roll+mod
-          })
-        }
-
-        //Perform a dice roll
-        if(dieMatch[1] !== undefined) {
-          dice = dieMatch[6]!==""?Number.parseInt(dieMatch[6]):1
-          if (dice > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
-          let initRoll = Array.from({length: dice}, (e, i) => rollDice(Number.parseInt(dieMatch[8])));
-          if(dieMatch[3] !== undefined){
-            advantage = true;
-            ad = dieMatch[4]!==""?Number.parseInt(dieMatch[4]):1
-            initRoll = halflingDice(initRoll, dieMatch[5], ad)
+          //Perform modifier calc
+          if(dieMatch[11] !== undefined){
+            let mod = Number.parseInt(dieMatch[9])
+            rollArray.forEach((roll, ind) => {
+              if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+mod)+"*"
+              else rollArray[ind] = roll+mod
+            })
           }
-          console.log(initRoll);
-          if(dieMatch[2] !== ""){
-            let innerSum = initRoll.reduce((a, b) => a + b, 0)
-            switch (dieMatch[2]) {
-              case "+":
+
+          //Perform a dice roll
+          if(dieMatch[1] !== undefined) {
+            dice = dieMatch[6]!==""?Number.parseInt(dieMatch[6]):1
+            if (dice > 1000) return new Error(`Cannot roll ${number} number of die for safety. Please try a number of die less than 1000`);
+            let initRoll = Array.from({length: dice}, (e, i) => rollDice(Number.parseInt(dieMatch[8])));
+            if(dieMatch[3] !== undefined){
+              advantage = true;
+              ad = dieMatch[4]!==""?Number.parseInt(dieMatch[4]):1
+              initRoll = halflingDice(initRoll, dieMatch[5], ad)
+            }
+            console.log(initRoll);
+            if(dieMatch[2] !== ""){
+              let innerSum = initRoll.reduce((a, b) => a + b, 0)
+              switch (dieMatch[2]) {
+                case "+":
                 rollArray.forEach((roll, ind) => {
                   if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+innerSum)+"*"
                   else rollArray[ind] = roll+innerSum
                 })
-              break;
-              case "-":
+                break;
+                case "-":
                 rollArray.forEach((roll, ind) => {
                   if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)-innerSum)+"*"
                   else rollArray[ind] = roll-innerSum
                 })
-              break;
-              default:
+                break;
+                default:
                 rollArray.forEach((roll, ind) => {
                   if(!Number.isInteger(roll)) rollArray[ind] = "*"+(convAdv(roll)+innerSum)+"*"
                   else rollArray[ind] = roll+innerSum
                 })
-              break;
+                break;
+              }
+            } else {
+              rollArray.push(...initRoll)
             }
-          } else {
-            rollArray.push(...initRoll)
-          }
 
-          // Keeping it for revert
-          // if(dieMatch[2] !== ""){
-          //   switch (dieMatch[2]) {
-          //     case "+":
-          //       rollArray = rollArray.flatMap( (r) =>
-          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
-          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
-          //       )
-          //       break;
-          //     case "-":
-          //       rollArray = rollArray.flatMap( (r) =>
-          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e-(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
-          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e-initRoll[i]:(e-convAdv(initRoll[i])))
-          //       )
-          //     break;
-          //     default:
-          //       rollArray = rollArray.flatMap( (r) =>
-          //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
-          //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
-          //       )
-          //     break;
-          //   }
-          // } else {
-          //   rollArray.push(...initRoll)
-          // }
+            // Keeping it for revert
+            // Calculates compound dice rolls two dimensionally. All subsequent dice rolls get added to the previous rolls indivdually, rather than being reduced
+            // This tends to not be what people want for table tops
+            // if(dieMatch[2] !== ""){
+            //   switch (dieMatch[2]) {
+            //     case "+":
+            //       rollArray = rollArray.flatMap( (r) =>
+            //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+            //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
+            //       )
+            //       break;
+            //     case "-":
+            //       rollArray = rollArray.flatMap( (r) =>
+            //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e-(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+            //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e-initRoll[i]:(e-convAdv(initRoll[i])))
+            //       )
+            //     break;
+            //     default:
+            //       rollArray = rollArray.flatMap( (r) =>
+            //         (!Number.isInteger(r))? fillArray(convAdv(r), dice).map((e, i) => "*"+(e+(Number.isInteger(initRoll[i])?initRoll[i]:convAdv(initRoll[i]))+"*")) :
+            //         fillArray(r, dice).map((e, i) => Number.isInteger(initRoll[i])?e+initRoll[i]:(e+convAdv(initRoll[i])))
+            //       )
+            //     break;
+            //   }
+            // } else {
+            //   rollArray.push(...initRoll)
+            // }
+          }
         }
       }
     }
-  }
-  //Sort array
-  if(advantage) {
-    rollArray.sort(function(a, b) {
-    	  if (Number.isInteger(a) && Number.isInteger(b)) return b - a
-      	else if (!Number.isInteger(a) && !Number.isInteger(b)) return convAdv(b) - convAdv(a)
-      	else if (!Number.isInteger(a) && Number.isInteger(b)) return -1
-      	else if (Number.isInteger(a) && !Number.isInteger(b)) return 1
-      	else return 0
+    //Sort array
+    if(advantage) {
+      rollArray.sort(function(a, b) {
+        if (Number.isInteger(a) && Number.isInteger(b)) return b - a
+        else if (!Number.isInteger(a) && !Number.isInteger(b)) return convAdv(b) - convAdv(a)
+        else if (!Number.isInteger(a) && Number.isInteger(b)) return -1
+        else if (Number.isInteger(a) && !Number.isInteger(b)) return 1
+        else return 0
       })
+    }
+  } else {
+    advantage = false;
+    rollArray.push(rollDice(20))
   }
 
   let sum;
@@ -227,12 +235,12 @@ module.exports = {
 
   clap: function(claps) {
     return new Promise((resolve, reject) => {
-       if(claps.length == 0) reject("Give :clap: me :clap: something :clap: to :clap: clap :clap: back");
-       else {
-         var clap = claps.join(' :clap: ');
-         clap = ":clap: "+clap+" :clap:";
-         resolve(clap);
-       }
+      if(claps.length == 0) reject("Give :clap: me :clap: something :clap: to :clap: clap :clap: back");
+      else {
+        var clap = claps.join(' :clap: ');
+        clap = ":clap: "+clap+" :clap:";
+        resolve(clap);
+      }
     })
   },
 
@@ -332,8 +340,8 @@ module.exports = {
   }
 
   // testing purposes
-  //,
-  //rollADie: rollADie
+  ,
+  rollADie: rollADie
 
 }
 
