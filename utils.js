@@ -1,7 +1,6 @@
 const request = require('request');
 var imgur = require('imgur');
 
-
 module.exports = {
 
   getUserPicture: function(userInfo) {
@@ -20,6 +19,7 @@ module.exports = {
           'bearer': process.env.SLACK_USER_TOKEN
         }
       })
+      imgur.setCredentials(process.env.IMGUR_USER, process.env.IMGUR_PASS, process.env.IMGUR__CLIENT_ID)
       imgur._imgurRequest('upload', f)
         .then((json) => {
           console.log(`File: ${fileName} uploaded successfully to imgur\nAt link ${json.data.link}`);
